@@ -159,7 +159,13 @@ vim.cmd.colorscheme("catppuccin")
 
 -- Setup plugins
 require("lualine").setup()      -- the status line
-require("nvim-tree").setup()    -- the tree file browser panel
+require("nvim-tree").setup({
+  sync_root_with_cwd = true,
+  update_focused_file = {
+    enable = true,
+    update_root = true,
+  },
+})
 require("telescope").setup()    -- command menu
 
 -- TreeSitter configuration
