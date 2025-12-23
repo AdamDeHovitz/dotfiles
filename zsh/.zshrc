@@ -81,6 +81,9 @@ source $ZSH/oh-my-zsh.sh
 export EDITOR='neovim'
 export VISUAL='neovim'
 
+# Enable vim mode for command line
+bindkey -v
+
 # Better history settings
 HISTSIZE=50000
 SAVEHIST=50000
