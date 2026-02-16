@@ -29,9 +29,9 @@ vim.opt.wrap = false
 vim.opt.sidescrolloff = 8
 vim.opt.scrolloff = 8
 
--- Title
+-- Title - show just the project directory name
 vim.opt.title = true
-vim.opt.titlestring = "nvim"
+vim.opt.titlestring = [[%{fnamemodify(getcwd(), ':t')}]]
 
 -- Persist undo (persists your undo history between sessions)
 vim.opt.undodir = vim.fn.stdpath("cache") .. "/undo"
@@ -146,6 +146,15 @@ local plugins = {
 
   -- Git integration
   { "lewis6991/gitsigns.nvim" },
+  { "linrongbin16/gitlinker.nvim", opts = {} },
+  { "sindrets/diffview.nvim" },  -- visual diff and code review
+
+  -- Markdown rendering
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    opts = {},
+    dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+  },
 }
 
 require("lazy").setup(plugins)
@@ -165,8 +174,14 @@ require("nvim-tree").setup({
     enable = true,
     update_root = true,
   },
+  filters = {
+    git_ignored = false,  -- show gitignored files by default
+  },
 })
 require("telescope").setup()    -- command menu
+
+-- Diffview setup
+require("diffview").setup()
 
 -- TreeSitter configuration
 require("nvim-treesitter.configs").setup({
@@ -214,6 +229,25 @@ vim.opt.foldlevel = 99  -- start with everything unfolded
 
 -- Mason (LSP installer) configuration
 require("mason").setup()
+
+-- Helper function to filter out bad paths
+local function should_attach(bufnr)
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  local buftype = vim.api.nvim_get_option_value('buftype', {buf = bufnr})
+
+  -- Don't attach to special buffers
+  if buftype ~= "" then
+    return false
+  end
+
+  -- Don't attach to diffview or relative path buffers
+  if bufname:match("^diffview://") or bufname:match("^%./") or bufname == "" then
+    return false
+  end
+
+  return true
+end
+
 require("mason-lspconfig").setup({
   ensure_installed = {
     "gopls",
@@ -223,7 +257,45 @@ require("mason-lspconfig").setup({
     "rust_analyzer",
     -- more available at https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md
   },
-  automatic_enable = true,  -- automatically enable installed servers
+  handlers = {
+    -- Default handler for all servers
+    function(server_name)
+      require("lspconfig")[server_name].setup({})
+    end,
+    -- Custom handler for basedpyright
+    ["basedpyright"] = function()
+      require("lspconfig").basedpyright.setup({
+        on_attach = function(client, bufnr)
+          if not should_attach(bufnr) then
+            vim.lsp.stop_client(client.id)
+            return false
+          end
+        end,
+        settings = {
+          basedpyright = {
+            analysis = {
+              diagnosticSeverityOverrides = {
+                reportUnannotatedClassAttribute = "none",
+                reportAny = "none",
+                reportUnknownVariableType = "none",
+              },
+            },
+          },
+        },
+      })
+    end,
+    -- Custom handler for ruff
+    ["ruff"] = function()
+      require("lspconfig").ruff.setup({
+        on_attach = function(client, bufnr)
+          if not should_attach(bufnr) then
+            vim.lsp.stop_client(client.id)
+            return false
+          end
+        end,
+      })
+    end,
+  },
 })
 
 -- LSP keybindings - attach these to every LSP client
@@ -238,6 +310,14 @@ vim.api.nvim_create_autocmd('LspAttach', {
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)                 -- Show documentation
     vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)       -- Rename symbol
     vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts)  -- Code actions
+    vim.keymap.set('n', '<leader>ta', function()
+      vim.lsp.buf.code_action({
+        filter = function(action)
+          return action.title:match("type") or action.title:match("annotation")
+        end,
+        apply = true,
+      })
+    end, opts)  -- Quick apply type annotation
     vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)         -- Previous diagnostic
     vim.keymap.set('n', ']d', vim.diagnostic.goto_next, opts)         -- Next diagnostic
     vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, opts) -- Show diagnostic
@@ -288,6 +368,24 @@ require('gitsigns').setup({
     topdelete    = { text = '‾' },
     changedelete = { text = '~' },
   },
+  current_line_blame = true,  -- show blame on current line by default
+  current_line_blame_opts = {
+    virt_text = true,
+    virt_text_pos = 'eol',
+    delay = 300,
+  },
+  current_line_blame_formatter = '<author>, <author_time:%Y-%m-%d> - <summary>',
+  on_attach = function(bufnr)
+    local gs = package.loaded.gitsigns
+    -- Hunk navigation
+    vim.keymap.set('n', ']h', gs.next_hunk, {buffer = bufnr, desc = "Next hunk"})
+    vim.keymap.set('n', '[h', gs.prev_hunk, {buffer = bufnr, desc = "Previous hunk"})
+    -- Hunk operations
+    vim.keymap.set('n', '<leader>hp', gs.preview_hunk, {buffer = bufnr, desc = "Preview hunk"})
+    vim.keymap.set('n', '<leader>hs', gs.stage_hunk, {buffer = bufnr, desc = "Stage hunk"})
+    vim.keymap.set('n', '<leader>hr', gs.reset_hunk, {buffer = bufnr, desc = "Reset hunk"})
+    vim.keymap.set('n', '<leader>hu', gs.undo_stage_hunk, {buffer = bufnr, desc = "Undo stage hunk"})
+  end,
 })
 
 -- Auto-save on focus loss (like IntelliJ)
@@ -327,6 +425,24 @@ vim.keymap.set("n", "<leader>fa", tele_builtin.find_files, {})
 vim.keymap.set("n", "<leader>fg", tele_builtin.live_grep, {})
 vim.keymap.set("n", "<leader>fb", tele_builtin.buffers, {})
 vim.keymap.set("n", "<leader>fh", tele_builtin.help_tags, {})
+
+-- Git blame keybindings
+vim.keymap.set("n", "<leader>gb", ":Gitsigns blame_line<CR>")
+vim.keymap.set("n", "<leader>gt", ":Gitsigns toggle_current_line_blame<CR>")
+
+-- Git link keybindings
+vim.keymap.set("n", "<leader>gl", ":GitLink<CR>")   -- Copy GitHub link
+vim.keymap.set("v", "<leader>gl", ":GitLink<CR>")   -- Copy GitHub link (visual mode for ranges)
+vim.keymap.set("n", "<leader>gL", ":GitLink!<CR>")  -- Open GitHub link in browser
+
+-- Diffview keybindings (code review)
+vim.keymap.set("n", "<leader>gd", ":DiffviewOpen<CR>")       -- Open diff view of working changes
+vim.keymap.set("n", "<leader>gh", ":DiffviewFileHistory %<CR>")  -- File history for current file
+vim.keymap.set("n", "<leader>gH", ":DiffviewFileHistory<CR>")    -- Full repo history
+vim.keymap.set("n", "<leader>gc", ":DiffviewClose<CR>")      -- Close diff view
+
+-- Markdown render toggle
+vim.keymap.set("n", "<leader>mt", ":RenderMarkdown toggle<CR>")  -- Toggle markdown rendering
 
 -- ============================================================================
 -- Keybindings

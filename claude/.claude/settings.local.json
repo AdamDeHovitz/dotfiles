@@ -6,7 +6,6 @@
       "WebFetch(domain:stackoverflow.com)",
       "WebFetch(domain:npmjs.com)",
       "WebFetch(domain:pypi.org)",
-
       "Bash(cat:*)",
       "Bash(find:*)",
       "Bash(ls:*)",
@@ -23,7 +22,6 @@
       "Bash(realpath:*)",
       "Bash(dirname:*)",
       "Bash(basename:*)",
-
       "Bash(echo:*)",
       "Bash(printf:*)",
       "Bash(date:*)",
@@ -33,7 +31,6 @@
       "Bash(hostname:*)",
       "Bash(whoami:*)",
       "Bash(id:*)",
-
       "Bash(git status:*)",
       "Bash(git log:*)",
       "Bash(git diff:*)",
@@ -63,7 +60,6 @@
       "Bash(git rebase:*)",
       "Bash(git cherry-pick:*)",
       "Bash(gh:*)",
-
       "Bash(python --version:*)",
       "Bash(python3 --version:*)",
       "Bash(python3:*)",
@@ -77,7 +73,6 @@
       "Bash(ruff:*)",
       "Bash(mypy:*)",
       "Bash(black:*)",
-
       "Bash(node --version:*)",
       "Bash(npm --version:*)",
       "Bash(npm list:*)",
@@ -97,7 +92,6 @@
       "Bash(prettier:*)",
       "Bash(vitest:*)",
       "Bash(jest:*)",
-
       "Bash(go version:*)",
       "Bash(go env:*)",
       "Bash(go list:*)",
@@ -116,7 +110,6 @@
       "Bash(cargo fmt:*)",
       "Bash(cargo clippy:*)",
       "Bash(rustc --version:*)",
-
       "Bash(brew --version:*)",
       "Bash(brew list:*)",
       "Bash(brew info:*)",
@@ -124,7 +117,6 @@
       "Bash(brew install:*)",
       "Bash(brew update:*)",
       "Bash(brew upgrade:*)",
-
       "Bash(docker --version:*)",
       "Bash(docker ps:*)",
       "Bash(docker images:*)",
@@ -133,16 +125,13 @@
       "Bash(docker compose:*)",
       "Bash(docker build:*)",
       "Bash(docker run:*)",
-
       "Bash(make:*)",
       "Bash(cmake:*)",
       "Bash(just:*)",
-
       "Bash(curl:*)",
       "Bash(wget:*)",
       "Bash(jq:*)",
       "Bash(yq:*)",
-
       "Bash(lsof:*)",
       "Bash(ps:*)",
       "Bash(top -l 1:*)",
@@ -152,7 +141,6 @@
       "Bash(uptime:*)",
       "Bash(pkill:*)",
       "Bash(kill:*)",
-
       "Bash(source:*)",
       "Bash(export:*)",
       "Bash(mv:*)",
@@ -161,11 +149,17 @@
       "Bash(touch:*)",
       "Bash(chmod:*)",
       "Bash(ln:*)",
-
       "Bash(sqlite3:*)",
       "Bash(psql --version:*)",
       "Bash(mysql --version:*)",
-      "Bash(redis-cli:*)"
+      "Bash(redis-cli:*)",
+      "Bash(~/.zshrc)",
+      "Bash(xargs -I{} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && cat \"\"\"\"{}/settings.local.json\"\"\"\" 2>/dev/null || cat \"\"\"\"{}/settings.json\"\"\"\" 2>/dev/null || echo \"\"\"\"\\(empty\\)\"\"\"\"')",
+      "WebSearch",
+      "Bash(git config:*)",
+      "Bash(gpg --list-secret-keys:*)",
+      "Bash(xargs:*)",
+      "Bash(git check-ignore:*)"
     ],
     "deny": [],
     "ask": []

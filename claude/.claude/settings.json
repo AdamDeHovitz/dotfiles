@@ -1,6 +1,33 @@
 {
   "includeCoAuthoredBy": false,
   "permissions": {
-    "defaultMode": "default"
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(git add:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git show:*)",
+      "Bash(git mv:*)",
+      "Bash(git init:*)",
+      "Bash(gh:*)",
+      "Bash(mv:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker pull:*)",
+      "Bash(kubectl describe:*)"
+    ],
+    "defaultMode": "default",
+    "additionalDirectories": [
+      "/tmp",
+      "/private/tmp"
+    ]
+  },
+  "enabledPlugins": {
+    "linear-cli@linear-cli": true,
+    "linear@claude-plugins-official": false
+  },
+  "env": {
+    "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1"
   }
 }

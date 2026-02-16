@@ -1,3 +1,3 @@
-## Communication Style
+# Claude Code Instructions
 
-- Be concise and knowledge-dense
+@~/.config/agents/AGENTS.md
