@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1"
+  },
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
@@ -23,11 +26,9 @@
       "/private/tmp"
     ]
   },
+  "model": "claude-opus-4-6[1m]",
   "enabledPlugins": {
     "linear-cli@linear-cli": true,
     "linear@claude-plugins-official": false
-  },
-  "env": {
-    "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1"
   }
 }
