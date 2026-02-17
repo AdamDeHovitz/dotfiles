@@ -111,6 +111,9 @@ local plugins = {
     build = 'cargo build --release',
     opts_extend = { "sources.default" },
     opts = {
+      enabled = function()
+        return not vim.tbl_contains({ "markdown", "text" }, vim.bo.filetype)
+      end,
       keymap = {
         preset = 'enter',
         ['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
@@ -155,6 +158,14 @@ local plugins = {
     opts = {},
     dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
   },
+
+  -- Distraction-free writing
+  {
+    "folke/zen-mode.nvim",
+    opts = {
+      window = { width = 80 },
+    },
+  },
 }
 
 require("lazy").setup(plugins)
@@ -194,6 +205,8 @@ require("nvim-treesitter.configs").setup({
     "javascript",
     "html",
     "css",
+    "markdown",
+    "markdown_inline",
     -- add more languages as needed!
   },
   sync_install = false,
@@ -388,6 +401,22 @@ require('gitsigns').setup({
   end,
 })
 
+-- Filetype-specific settings for prose/markdown
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "markdown", "text" },
+  callback = function()
+    vim.opt_local.wrap = true
+    vim.opt_local.linebreak = true
+    vim.opt_local.breakindent = true
+    vim.opt_local.spell = true
+    vim.opt_local.textwidth = 80
+    vim.opt_local.cursorcolumn = false
+
+    vim.keymap.set('n', 'j', 'gj', { buffer = true })
+    vim.keymap.set('n', 'k', 'gk', { buffer = true })
+  end,
+})
+
 -- Auto-save on focus loss (like IntelliJ)
 vim.api.nvim_create_autocmd("FocusLost", {
   pattern = "*",
@@ -443,6 +472,9 @@ vim.keymap.set("n", "<leader>gc", ":DiffviewClose<CR>")      -- Close diff view
 
 -- Markdown render toggle
 vim.keymap.set("n", "<leader>mt", ":RenderMarkdown toggle<CR>")  -- Toggle markdown rendering
+
+-- Zen mode for distraction-free writing
+vim.keymap.set("n", "<leader>z", ":ZenMode<CR>")
 
 -- ============================================================================
 -- Keybindings
