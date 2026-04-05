@@ -71,7 +71,11 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git z docker kubectl history-substring-search)
+plugins=(git z docker kubectl history-substring-search zbell)
+
+# zbell: bell when long commands finish (triggers Ghostty tab 🔔)
+zbell_duration=15
+zbell_ignore=($EDITOR $PAGER less more man ssh top htop btop watch)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -95,8 +99,18 @@ setopt EXTENDED_HISTORY          # Record timestamp of command
 # Useful developer aliases
 alias v="nvim"
 alias vi="nvim"
-alias ll="ls -lah"
-alias la="ls -A"
+if command -v bat >/dev/null 2>&1; then
+  alias cat="bat"
+fi
+if command -v eza >/dev/null 2>&1; then
+  alias ll="eza -lah --icons --git"
+  alias la="eza -a --icons"
+  alias ls="eza --icons"
+  alias tree="eza --tree --icons"
+else
+  alias ll="ls -lah"
+  alias la="ls -A"
+fi
 alias gs="git status"
 alias gd="git diff"
 alias gl="git log --oneline -20"
@@ -127,14 +141,15 @@ alias k=kubectl
 
 # Claude Code aliases
 # cl = CLaude, clh/s/o = model (Haiku/Sonnet/Opus)
-alias cl="claude"
-alias clh="claude --model haiku"
-alias cls="claude --model sonnet"
-alias clo="claude --model opus"
-alias clc="claude --continue"      # Continue last conversation
-alias clr="claude --resume"        # Resume with picker
-alias clp="claude --print"         # Print mode (non-interactive, single response)
-alias cly="claude --dangerously-skip-permissions"  # Yes to all (use cautiously)
+: "${CLAUDE_FLAGS:=}"
+cl() { claude ${=CLAUDE_FLAGS} "$@"; }
+clh() { claude --model haiku ${=CLAUDE_FLAGS} "$@"; }
+cls() { claude --model sonnet ${=CLAUDE_FLAGS} "$@"; }
+clo() { claude --model opus ${=CLAUDE_FLAGS} "$@"; }
+clc() { claude --continue ${=CLAUDE_FLAGS} "$@"; }
+clr() { claude --resume ${=CLAUDE_FLAGS} "$@"; }
+clp() { claude --print ${=CLAUDE_FLAGS} "$@"; }
+cly() { claude --dangerously-skip-permissions "$@"; }  # Yes to all (use cautiously)
 
 # Source local secrets (API keys, tokens, etc.)
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
@@ -161,13 +176,14 @@ cdp() {
   git pull --ff-only || return 1
 }
 
-# Claude Worktree - quickly spin up a worktree and start claude
-# Usage: clwt <repo> <feature> [parent]
-# Mnemonic: CLaude WorkTree
-# parent: optional folder under $HOME (default: Projects)
-clwt() {
+# Shared assistant worktree launcher
+# Usage: _agent_wt <launcher_fn> <command_name> <repo> <feature> [parent]
+_agent_wt() {
+  local launcher_fn="$1" command_name="$2"
+  shift 2
+
   local repo="$1" feature="$2" parent="${3:-Projects}"
-  [[ -z "$repo" || -z "$feature" ]] && { echo "Usage: clwt <repo> <feature> [parent]"; return 1; }
+  [[ -z "$repo" || -z "$feature" ]] && { echo "Usage: ${command_name} <repo> <feature> [parent]"; return 1; }
 
   local parent_dir="$HOME/$parent"
   local main_repo="$parent_dir/$repo"
@@ -176,37 +192,55 @@ clwt() {
 
   [[ ! -d "$main_repo/.git" ]] && { echo "Error: $main_repo is not a git repo"; return 1; }
 
-  # Set tab title to uppercase feature name (hyphens → spaces)
+  # Set tab title to uppercase feature name (hyphens -> spaces)
   local tab_title="${feature//-/ }"
   tab_title="${tab_title:u}"
   printf '\033]0;%s\007' "$tab_title"
 
-  mkdir -p "$wt_dir"
-  git -C "$main_repo" fetch origin main
-  git -C "$main_repo" worktree add -b "ad/$feature" "$wt_path" origin/main
+  mkdir -p "$wt_dir" || return 1
+  git -C "$main_repo" fetch origin main || return 1
+  git -C "$main_repo" worktree add -b "ad/$feature" "$wt_path" origin/main || return 1
 
-  # Copy Claude Code permissions (not symlink - worktrees may need different permissions)
-  if [[ -f "$main_repo/.claude/settings.local.json" ]]; then
-    mkdir -p "$wt_path/.claude"
-    cp "$main_repo/.claude/settings.local.json" "$wt_path/.claude/"
-  fi
+  git -C "$main_repo" ls-files --others --directory -z | while IFS= read -r -d '' _entry; do
+    local _clean="${_entry%/}" _base="${_entry%%/*}"
+    _base="${_base%/}"
+    case "$_base" in
+      .git|.DS_Store|.direnv|.nproject|.nworkspace|.codex|.cursor|.continue) continue ;;
+      .aider*|*.egg-info) continue ;;
+      node_modules|__pycache__|.venv|.pytest_cache|.ruff_cache|.mypy_cache|.terraform|.tox|.cache|dist|.coverage) continue ;;
+    esac
+    [[ -e "$wt_path/$_clean" || -L "$wt_path/$_clean" ]] && continue
+    local _dir="${_clean%/*}"
+    [[ "$_dir" != "$_clean" ]] && mkdir -p "$wt_path/$_dir"
+    ln -s "$main_repo/$_clean" "$wt_path/$_clean"
+  done
 
-  # Symlink .local/ for shared scratch space
-  if [[ -d "$main_repo/.local" ]]; then
-    ln -s "$main_repo/.local" "$wt_path/.local"
-  fi
+  cd "$wt_path" || return 1
+  "$launcher_fn"
+}
 
-  # Symlink CLAUDE.md if it exists and is NOT tracked by git
-  if [[ -f "$main_repo/CLAUDE.md" ]] && ! git -C "$main_repo" ls-files --error-unmatch CLAUDE.md &>/dev/null; then
-    ln -s "$main_repo/CLAUDE.md" "$wt_path/CLAUDE.md"
-  fi
+_clwt_launch() {
+  cl
+}
 
-  # Symlink AGENTS.md if it exists and is NOT tracked by git
-  if [[ -f "$main_repo/AGENTS.md" ]] && ! git -C "$main_repo" ls-files --error-unmatch AGENTS.md &>/dev/null; then
-    ln -s "$main_repo/AGENTS.md" "$wt_path/AGENTS.md"
-  fi
+_cowt_launch() {
+  codex
+}
 
-  cd "$wt_path" && claude
+# Claude Worktree - quickly spin up a worktree and start Claude
+# Usage: clwt <repo> <feature> [parent]
+# Mnemonic: CLaude WorkTree
+# parent: optional folder under $HOME (default: Projects)
+clwt() {
+  _agent_wt _clwt_launch clwt "$@"
+}
+
+# Codex Worktree - quickly spin up a worktree and start Codex
+# Usage: cowt <repo> <feature> [parent]
+# Mnemonic: COdex WorkTree
+# parent: optional folder under $HOME (default: Projects)
+cowt() {
+  _agent_wt _cowt_launch cowt "$@"
 }
 
 # Remove synced worktrees - inverse of clwt

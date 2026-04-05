@@ -8,13 +8,21 @@
       "Bash(ls:*)",
       "Bash(cat:*)",
       "Bash(find:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
       "Bash(git add:*)",
       "Bash(git pull:*)",
       "Bash(git stash:*)",
-      "Bash(git show:*)",
       "Bash(git mv:*)",
       "Bash(git init:*)",
-      "Bash(gh:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh issue:*)",
+      "Bash(gh run:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh workflow:*)",
+      "Bash(gh search:*)",
       "Bash(mv:*)",
       "Bash(docker logs:*)",
       "Bash(docker pull:*)",
@@ -26,9 +34,30 @@
       "/private/tmp"
     ]
   },
-  "model": "claude-opus-4-6[1m]",
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '\\a' > /dev/tty"
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "linear-cli@linear-cli": true,
-    "linear@claude-plugins-official": false
+    "linear@claude-plugins-official": false,
+    "codex@openai-codex": true
+  },
+  "extraKnownMarketplaces": {
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    }
   }
 }

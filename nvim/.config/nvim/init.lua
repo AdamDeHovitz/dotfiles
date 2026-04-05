@@ -198,6 +198,7 @@ require("diffview").setup()
 require("nvim-treesitter.configs").setup({
   ensure_installed = {
     "typescript",
+    "tsx",
     "python",
     "rust",
     "go",
@@ -205,6 +206,8 @@ require("nvim-treesitter.configs").setup({
     "javascript",
     "html",
     "css",
+    "json",
+    "yaml",
     "markdown",
     "markdown_inline",
     -- add more languages as needed!
@@ -268,6 +271,8 @@ require("mason-lspconfig").setup({
     "eslint",
     "ruff",
     "rust_analyzer",
+    "ts_ls",
+    "tailwindcss",
     -- more available at https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md
   },
   handlers = {
@@ -470,8 +475,17 @@ vim.keymap.set("n", "<leader>gh", ":DiffviewFileHistory %<CR>")  -- File history
 vim.keymap.set("n", "<leader>gH", ":DiffviewFileHistory<CR>")    -- Full repo history
 vim.keymap.set("n", "<leader>gc", ":DiffviewClose<CR>")      -- Close diff view
 
--- Markdown render toggle
+-- Markdown keybindings
 vim.keymap.set("n", "<leader>mt", ":RenderMarkdown toggle<CR>")  -- Toggle markdown rendering
+vim.keymap.set("v", "<C-k>", function()
+  -- Yank selection, wrap as markdown link, place cursor in URL position
+  vim.cmd('normal! "zc')
+  local text = vim.fn.getreg("z")
+  vim.api.nvim_put({ "[" .. text .. "]()" }, "c", false, true)
+  -- Cursor is after closing ), move back inside the parens
+  vim.cmd("normal! h")
+  vim.cmd("startinsert")
+end, { desc = "Wrap selection as markdown link" })
 
 -- Zen mode for distraction-free writing
 vim.keymap.set("n", "<leader>z", ":ZenMode<CR>")
