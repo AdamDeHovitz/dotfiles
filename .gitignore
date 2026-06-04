@@ -1,3 +1,4 @@
 .DS_Store
 *.local
 claude/.claude/settings.local.json
+gh/.config/gh/hosts.yml

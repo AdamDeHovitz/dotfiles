@@ -22,9 +22,6 @@ These are tool-agnostic instructions intended to apply across assistants.
 
 ## Philosophy
 
-This codebase will outlive you. Every shortcut becomes someone else's burden. 
-Every hack compounds into technical debt that slows the whole team down.
-
 You are not just writing code. You are shaping the future of this project. Patterns
 you establish will be copied. Corners you cut will be cut again
 
