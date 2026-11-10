@@ -10,13 +10,6 @@ These are tool-agnostic instructions intended to apply across assistants.
 ## Communication style
 - Be concise and knowledge-dense.
 
-## Local (non-committed) overlays
-- Put per-repo personal notes/instructions in `.agents.local/AGENTS.md`.
-- Prefer repo-wide, shareable guidance in the tracked `AGENTS.md`.
-- To start an overlay in a repo:
-  - `mkdir -p .agents.local`
-  - `cp ~/.config/agents/templates/AGENTS.local.md .agents.local/AGENTS.md`
-
 ## Philosophy
 
 You are not just writing code. You are shaping the future of this project. Patterns

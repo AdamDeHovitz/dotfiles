@@ -57,6 +57,6 @@ stow -D -t ~ nvim
 
 ## Notes
 
-- Work-specific configuration should go in `~/Projects` (repo-tracked `AGENTS.md` is fine; personal overlays should go in `.agents.local/`)
+- Project-specific agent instructions belong in each repo's tracked `AGENTS.md`
 - This repo contains personal/shared configuration only
 - Backup existing configs before stowing to avoid conflicts
