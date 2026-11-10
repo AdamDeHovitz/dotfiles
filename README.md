@@ -49,7 +49,7 @@ stow -D -t ~ nvim
 ### What gets installed
 
 - `agents/` → `~/.config/agents/`
-- `claude/` → `~/.claude/`
+- `claude/` → `~/.claude/` (its `CLAUDE.md` only imports `~/.config/agents/AGENTS.md`, so stow `agents` too)
 - `gh/` → `~/.config/gh/`
 - `nvim/` → `~/.config/nvim/`
 - `vim/` → `~/.vimrc`
